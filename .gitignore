@@ -38,3 +38,6 @@ input.vars
 **/site/*
 **/book/*
 **/public/*
+
+*.txt
+*.iso
