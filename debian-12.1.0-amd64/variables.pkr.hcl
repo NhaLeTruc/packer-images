@@ -1,20 +1,3 @@
-packer {
-  required_plugins {
-    qemu = {
-      version = "~> 1"
-      source  = "github.com/hashicorp/qemu"
-    }
-    ansible = {
-      version = "~> 1"
-      source = "github.com/hashicorp/ansible"
-    }
-    vagrant = {
-      source  = "github.com/hashicorp/vagrant"
-      version = "~> 1"
-    }
-  }
-}
-
 variable "disk_size" {
   type = string
   default = "25G"
@@ -32,10 +15,10 @@ variable "vm_cpu" {
 
 variable "iso_url" {
   type = string
-  default = "debian-12.4.0-amd64-netinst.iso"
+  default = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.10.0-amd64-netinst.iso"
 }
 
 variable "iso_checksum" {
   type = string
-  default = "sha256:64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94"
+  default = "sha256:ee8d8579128977d7dc39d48f43aec5ab06b7f09e1f40a9d98f2a9d149221704a"
 }
