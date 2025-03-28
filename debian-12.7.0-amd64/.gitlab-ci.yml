@@ -1,0 +1,167 @@
+stages:
+  - validate
+  - build
+  - test
+  - release
+
+variables:
+  PACKER_VERSION: 1.9.4
+  TF_VERSION: 1.6.5
+  GOTESTSUM_VERSION: 1.11.0
+
+# See https://docs.gitlab.com/ee/ci/caching/#cache-go-dependencies
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+format:test:
+  stage: validate
+  image: golang:1.21.4-bookworm
+  script:
+    - export GOFMT_OUTPUT="$(gofmt -l test)"
+    - echo "$GOFMT_OUTPUT"
+    - "[ $(echo -n $GOFMT_OUTPUT | wc -l) -eq 0 ]"
+
+lint:test:
+  stage: validate
+  image: golangci/golangci-lint:v1.55.2
+  script:
+    - cd test
+    - golangci-lint run --timeout=5m ./...
+
+format:packer:
+  stage: validate
+  image: debian:bookworm-slim
+  before_script:
+    - apt-get update
+    - apt-get install --yes wget unzip
+    - wget -O /tmp/packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip
+    - unzip /tmp/packer.zip
+    - mv packer /usr/local/bin
+  script:
+    - packer fmt -check .
+
+validate:packer:
+  stage: validate
+  image: debian:bookworm-slim
+  before_script:
+    - apt-get update
+    - apt-get install --yes wget unzip
+    - wget -O /tmp/packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip
+    - unzip /tmp/packer.zip
+    - mv packer /usr/local/bin
+  script:
+    - packer init debian.pkr.hcl
+    - packer validate -var-file secrets.example.pkr.hcl debian.pkr.hcl
+
+upload-preseed:
+  stage: build
+  image: debian:bookworm-slim
+  script:
+    - echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/artifacts/http/preseed.cfg" > preseed-url.txt
+  artifacts:
+    when: always
+    paths:
+      - http/preseed.cfg
+      - preseed-url.txt
+    expire_in: 1 week
+
+build:packer:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_TAG
+  dependencies:
+    - upload-preseed
+  needs:
+    - upload-preseed
+  image: debian:bookworm-slim
+  variables:
+    PKR_VAR_template_name_suffix: -${CI_COMMIT_TAG}
+    PKR_VAR_proxmox_node: bfte
+    # TEMPLATE_ROOT_PASSWORD variable must be set.
+    # Note the root account is locked, so the password does not really matter.
+    PKR_VAR_ssh_password: ${TEMPLATE_ROOT_PASSWORD}
+  before_script:
+    - apt-get update
+    - apt-get install --yes wget unzip
+    - wget -O /tmp/packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip
+    - unzip /tmp/packer.zip
+    - mv packer /usr/local/bin
+  script:
+    - packer init debian.pkr.hcl
+    - export PKR_VAR_preseed_url="$(cat preseed-url.txt)"
+    - packer build debian.pkr.hcl
+
+test:artifact:
+  extends: .go-cache
+  stage: test
+  rules:
+    - if: $CI_COMMIT_TAG
+  image: golang:1.21.4-bookworm
+  variables:
+    PROXMOX_VE_API_TOKEN: ${PROXMOX_USERNAME}=${PROXMOX_TOKEN}
+    TEST_EXISTING_TEMPLATE: debian-${CI_COMMIT_TAG}
+  before_script:
+    - apt-get update
+    - apt-get install --yes unzip
+    - wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+    - unzip /tmp/terraform.zip
+    - mv terraform /usr/local/bin
+    - wget -O /tmp/gotestsum.tar.gz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz
+    - tar -xzf /tmp/gotestsum.tar.gz
+    - mv gotestsum /usr/local/bin
+  script:
+    - cd test
+    - gotestsum --junitfile report.xml --format testname
+  artifacts:
+    when: always
+    reports:
+      junit: test/report.xml
+
+test:packer:
+  extends: .go-cache
+  stage: test
+  rules:
+    - if: $CI_COMMIT_TAG == null
+  dependencies:
+    - upload-preseed
+  image: golang:1.21.4-bookworm
+  variables:
+    PROXMOX_VE_API_TOKEN: ${PROXMOX_USERNAME}=${PROXMOX_TOKEN}
+  before_script:
+    - apt-get update
+    - apt-get install --yes unzip
+    - wget -O /tmp/packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip
+    - unzip /tmp/packer.zip
+    - mv packer /usr/local/bin
+    - wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+    - unzip /tmp/terraform.zip
+    - mv terraform /usr/local/bin
+    - wget -O /tmp/gotestsum.tar.gz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz
+    - tar -xzf /tmp/gotestsum.tar.gz
+    - mv gotestsum /usr/local/bin
+  script:
+    - packer init debian.pkr.hcl
+    - cd test
+    - export PRESEED_URL="$(cat ../preseed-url.txt)"
+    - gotestsum --junitfile report.xml --format testname
+  artifacts:
+    when: always
+    reports:
+      junit: test/report.xml
+
+release:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  script:
+    - echo 'running something because it is required'
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: See debian-${CI_COMMIT_TAG} template in Proxmox.
