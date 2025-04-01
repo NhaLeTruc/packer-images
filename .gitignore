@@ -1,6 +1,3 @@
-
-*.tfvars
-
 .cache/*
 .venv/*
 cloud-config
@@ -41,3 +38,4 @@ input.vars
 
 *.txt
 *.iso
+.env

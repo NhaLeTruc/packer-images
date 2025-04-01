@@ -44,7 +44,7 @@ source "proxmox-iso" "debian" {
   node                     = var.proxmox_node
 
   iso_storage_pool = "local"
-  iso_url          = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.7.0-amd64-netinst.iso"
+  iso_file          = "local:iso/debian-12.7.0-amd64-netinst.iso"
   iso_checksum     = "8fde79cfc6b20a696200fc5c15219cf6d721e8feb367e9e0e33a79d1cb68fa83"
 
   template_name        = "${var.template_name}${var.template_name_suffix}"
@@ -58,6 +58,9 @@ source "proxmox-iso" "debian" {
 
   memory = 2048
   cores  = 2
+  sockets = 2
+  vm_id  = 901
+  
 
   network_adapters {
     model  = "virtio"
@@ -76,7 +79,7 @@ source "proxmox-iso" "debian" {
   ssh_username   = "root"
   ssh_password   = "packer"
   ssh_port       = 22
-  ssh_timeout    = "10m"
+  ssh_timeout    = "20m"
 
   boot_wait = "30s"
   boot_command = [
