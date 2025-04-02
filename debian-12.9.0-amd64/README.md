@@ -20,3 +20,9 @@ pveum user add $PKR_USERNAME@pve --password $PKR_PASSWORD
 # Assign created role for user
 pveum aclmod / -user $PKR_USERNAME@pve -role $PKR_ROLE_NAME
 ```
+
+## Test run 2nd April 2025
+
+This template include setup for consul service discovery registration. But was disabled for VM template creation run only.
+
+Run was successfully created VM template with QEMU and Cloud-init.
