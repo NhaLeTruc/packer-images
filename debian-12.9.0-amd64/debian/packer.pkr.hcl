@@ -14,20 +14,13 @@ packer {
 ##############################
 #### V A R I A B L E S
 ###################
-variable "proxmox_api_password" {
-  type      = string
-  sensitive = true
-}
-variable "proxmox_api_user" {
-  type = string
-}
-variable "proxmox_host" {
-  type = string
-}
 variable "proxmox_node" {
   type = string
 }
 variable "iso_file" {
+  type = string
+}
+variable "iso_checksum" {
   type = string
 }
 variable "storage_type" {
@@ -55,13 +48,11 @@ locals {
 #### T E M P L A T E
 ##############
 source "proxmox-iso" "debian" {
-  proxmox_url              = "https://${var.proxmox_host}/api2/json"
   insecure_skip_tls_verify = true
-  username                 = var.proxmox_api_user
-  password                 = var.proxmox_api_password
 
   template_description = "Built from ${basename(var.iso_file)} on ${formatdate("YYYY-MM-DD hh:mm:ss ZZZ", timestamp())}"
   node                 = var.proxmox_node
+  vm_id = 903
 
   network_adapters {
     bridge   = "vmbr0"
@@ -70,7 +61,7 @@ source "proxmox-iso" "debian" {
   }
 
   disks {
-    disk_size    = "20G"
+    disk_size    = "10G"
     format       = "raw"
     io_thread    = true
     storage_pool = local.storage_type
@@ -80,6 +71,7 @@ source "proxmox-iso" "debian" {
   scsi_controller = "virtio-scsi-single"
 
   iso_file       = var.iso_file
+  iso_checksum   = var.iso_checksum
   http_directory = "./"
   boot_wait      = "10s"
   boot_command   = ["<esc><wait>auto url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<enter>"]
@@ -87,12 +79,13 @@ source "proxmox-iso" "debian" {
 
   cloud_init              = true
   cloud_init_storage_pool = var.storage_type
+  qemu_agent      = true
 
   vm_name  = local.template_name
   os       = "l26"
-  memory   = 1024
-  cores    = 1
-  sockets  = "1"
+  memory   = 4096
+  cores    = 2
+  sockets  = "2"
   machine  = "q35"
 
   # Note: this password is needed by packer to run the file provisioner, but
@@ -135,14 +128,14 @@ build {
     source      = "files/"
   }
 
-  provisioner "shell" {
-    execute_command = "id && echo 'root' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
-    inline          = [
-      "cd ${local.builder_dir}",
-      "chmod +x install.sh",
-      "./install.sh",
-      "sleep 1",
-      "rm -rf ${local.builder_dir}",
-    ]
-  }
+  # provisioner "shell" {
+  #   execute_command = "id && echo 'root' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+  #   inline          = [
+  #     "cd ${local.builder_dir}",
+  #     "chmod +x install.sh",
+  #     "./install.sh",
+  #     "sleep 1",
+  #     "rm -rf ${local.builder_dir}",
+  #   ]
+  # }
 }
