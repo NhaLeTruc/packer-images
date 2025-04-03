@@ -1,0 +1,1 @@
+# Proxmox Debian VM templates
