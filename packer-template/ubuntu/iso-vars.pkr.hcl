@@ -1,1 +1,0 @@
-../common/iso-vars.pkr.hcl
