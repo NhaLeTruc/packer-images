@@ -49,7 +49,10 @@ Set `PROXMOX_URL`, `PROXMOX_USERNAME` and `PROXMOX_TOKEN` environment variables.
 Build with a template name suffix denoting the current commit, for example `2b1adb0`:
 
 ```sh
-packer build --var-file secrets.pkr.hcl --var template_name_suffix=-1b1 .
+packer init .
+packer fmt .
+packer validate .
+packer build --var-file vars/secrets.pkr.hcl .
 ```
 
 ### Test
@@ -107,24 +110,3 @@ This repository, Packer and Debian all assume you are running on Linux.
 - [cloud-init documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
 - [Setting up Proxmox role with permissions for Packer](https://github.com/hashicorp/packer/issues/8463#issuecomment-726844945).
 - [Official Alpine cloud image builder](https://gitlab.alpinelinux.org/alpine/cloud/alpine-cloud-images).
-
-
-Warning: 'iso_file' is deprecated and will be removed in a future release, define the boot iso options in a 'boot_iso' block
-
-  on debian-source.pkr.hcl line 1:
-  (source code not available)
-
-Warning: 'iso_storage_pool' is deprecated and will be removed in a future release, define the boot iso options in a 'boot_iso' block
-
-  on debian-source.pkr.hcl line 1:
-  (source code not available)
-
-Warning: 'iso_checksum' is deprecated and will be removed in a future release, define the boot iso options in a 'boot_iso' block
-
-  on debian-source.pkr.hcl line 1:
-  (source code not available)
-
-Warning: 'unmount_iso' is deprecated and will be removed in a future release, define the boot iso options in a 'boot_iso' block
-
-  on debian-source.pkr.hcl line 1:
-  (source code not available)

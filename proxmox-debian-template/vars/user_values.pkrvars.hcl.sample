@@ -1,0 +1,66 @@
+############################################
+### Admin block
+############################################
+tls_bool = true
+proxmox_node = "dlfsflksg"
+vm_id = 999999
+template_name = "temp"
+template_name_suffix = "dafdadf"
+
+############################################
+### boot_iso block
+############################################
+iso_type = "scsi"
+iso_file = "local:iso/debian-12.10.0-amd64-netinst.iso"
+iso_checksum = "8fde79cfc6b20a696200fc5c15219cf6d721e8feb367e9e0e33a79d1cb68fa83"
+iso_unmount = true
+
+############################################
+### Hardwares block
+############################################
+scsi_controller = "virtio-scsi-single"
+os = "l26"
+machine = "q35"
+bios = "seabios"
+qemu_agent = true
+cloud_init = true 
+cloud_init_storage_pool = "storoe-lvm"
+cores = 2
+sockets = 2
+memory = 4096
+cpu_type = "kvm64"
+
+
+############################################
+### network_adapters block
+############################################
+network_bridge = "vmbr1"
+network_model = "virtio"
+vlan_tag = "lab"
+firewall = false
+
+
+############################################
+### disks block
+############################################
+disk_type = "scsi"
+disk_size = "1G"
+disk_format = "qcow2"
+storage_pool = "storoe-lvm"
+io_thread = false
+
+############################################
+### Packer SSH block
+############################################
+http_directory = "http"
+ssh_username = "root"
+ssh_password = "packer"
+ssh_timeout = "20m"
+ssh_port = 22
+
+
+############################################
+### Boot block
+############################################
+boot_wait = "30s"
+preseed_url = "http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg"

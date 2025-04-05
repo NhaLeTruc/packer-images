@@ -1,51 +1,57 @@
 source "proxmox-iso" "debian" {
-  insecure_skip_tls_verify = true
-  node                     = var.proxmox_node
 
-  iso_storage_pool = "local"
-  iso_file          = "local:iso/debian-12.7.0-amd64-netinst.iso"
-  iso_checksum     = "8fde79cfc6b20a696200fc5c15219cf6d721e8feb367e9e0e33a79d1cb68fa83"
+  insecure_skip_tls_verify  = var.tls_bool
+  node                      = var.proxmox_node
+  vm_id                     = var.vmid
+  template_name             = "${var.template_name}${var.template_name_suffix}"
+  template_description      = var.template_description
 
-  template_name        = "${var.template_name}${var.template_name_suffix}"
-  template_description = var.template_description
+  boot_iso {
+    type          = var.iso_type
+    iso_file      = var.iso_file
+    iso_checksum  = var.iso_checksum
+    unmount       = var.iso_unmount
+  }
 
-  unmount_iso = true
+  scsi_controller         = var.scsi_controller
+  os                      = var.os
+  machine                 = var.machine
+  bios                    = var.bios
 
-  scsi_controller = "virtio-scsi-single"
-  os              = "l26"
-  qemu_agent      = true
+  qemu_agent              = var.qemu_agent
+  cloud_init              = var.cloud_init
+  cloud_init_storage_pool = var.cloud_init_storage_pool
 
-  memory = 2048
-  cores  = 2
-  sockets = 2
-  vm_id  = 901
+  cores     = var.cores
+  memory    = var.memory
+  sockets   = var.sockets
+  cpu_type  = var.cpu_type
   
-
   network_adapters {
-    model  = "virtio"
-    bridge = "vmbr0"
+    bridge   = var.network_bridge
+    model    = var.network_model
+    vlan_tag = var.network_vlan
+    firewall = var.firewall
   }
 
   disks {
-    type         = "scsi"
-    disk_size    = "10G"
-    storage_pool = "local-lvm"
-    format       = "raw"
-    io_thread    = true
+    type         = var.disk_type
+    disk_size    = var.disk_size
+    format       = var.disk_format
+    storage_pool = var.storage_pool
+    io_thread    = var.io_thread
   }
 
-  http_directory = "http"
-  ssh_username   = "root"
-  ssh_password   = "packer"
-  ssh_port       = 22
-  ssh_timeout    = "20m"
-
-  boot_wait = "30s"
+  http_directory = var.http_directory
+  ssh_username   = var.ssh_username
+  ssh_password   = var.ssh_password
+  ssh_timeout    = var.ssh_timeout
+  ssh_port       = var.ssh_port
+  
+  boot_wait = var.boot_wait
   boot_command = [
     "<esc><wait>",
     "auto url=${var.preseed_url}<enter>"
   ]
 
-  cloud_init              = true
-  cloud_init_storage_pool = "local-lvm"
 }
