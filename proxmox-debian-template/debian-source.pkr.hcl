@@ -2,7 +2,7 @@ source "proxmox-iso" "debian" {
 
   insecure_skip_tls_verify  = var.tls_bool
   node                      = var.proxmox_node
-  vm_id                     = var.vmid
+  vm_id                     = var.vm_id
   template_name             = "${var.template_name}${var.template_name_suffix}"
   template_description      = var.template_description
 
@@ -30,8 +30,9 @@ source "proxmox-iso" "debian" {
   network_adapters {
     bridge   = var.network_bridge
     model    = var.network_model
-    vlan_tag = var.network_vlan
-    firewall = var.firewall
+    # These need firewall and vlan setup to work
+    # vlan_tag = var.vlan_tag
+    # firewall = var.firewall
   }
 
   disks {

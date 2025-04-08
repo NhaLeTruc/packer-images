@@ -37,7 +37,6 @@ variable "template_description" {
   type        = string
   default     = <<EOF
 Debian Linux cloud image with QEMU guest agent and cloud-init.
-https://git.houseofkummer.com/homelab/devops/packer-debian
 EOF
 }
 
@@ -48,7 +47,7 @@ EOF
 
 variable "iso_type" {
   description = "Bus type that the ISO will be mounted on. Can be ide, sata or scsi. Defaults to ide."
-  type        = bool
+  type        = string
   default     = "scsi"
 }
 
@@ -86,15 +85,15 @@ variable "os" {
 }
 
 variable "machine" {
-  description = "Set the machine type. Supported values are 'pc' or 'q35'."
+  description = "Set the machine type. Supported values are ''; 'pc' or 'q35'. NOTE: only default working properly."
   type        = string
-  default     = "q35"
+  default     = ""
 }
 
 variable "bios" {
-  description = "Set the machine bios. This can be set to ovmf or seabios. The default value is seabios."
+  description = "Set the machine bios. This can be set to ovmf or seabios. NOTE: only default working properly."
   type        = string
-  default     = "seabios"
+  default     = ""
 }
 
 variable "qemu_agent" {

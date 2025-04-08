@@ -51,8 +51,8 @@ Build with a template name suffix denoting the current commit, for example `2b1a
 ```sh
 packer init .
 packer fmt .
-packer validate .
-packer build --var-file vars/secrets.pkr.hcl .
+packer validate --var-file vars/build.pkrvars.hcl .
+packer build --var-file vars/build.pkrvars.hcl .
 ```
 
 ### Test

@@ -35,7 +35,6 @@ variable "template_description" {
   type        = string
   default     = <<EOF
 Debian Linux cloud image with QEMU guest agent and cloud-init.
-https://git.houseofkummer.com/homelab/devops/packer-debian
 EOF
 }
 
