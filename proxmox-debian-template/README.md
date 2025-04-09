@@ -103,14 +103,6 @@ Set `PACKER_LOG=1` to enable logging for easier troubleshooting.
 Avoid running Packer on Windows.
 This repository, Packer and Debian all assume you are running on Linux.
 
-## Useful Resources
-
-- [Packer Proxmox ISO builder documentation](https://www.packer.io/docs/builders/proxmox/iso).
-- [Proxmox wiki on creating a custom cloud image](https://pve.proxmox.com/wiki/Cloud-Init_FAQ#Creating_a_custom_cloud_image).
-- [cloud-init documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
-- [Setting up Proxmox role with permissions for Packer](https://github.com/hashicorp/packer/issues/8463#issuecomment-726844945).
-- [Official Alpine cloud image builder](https://gitlab.alpinelinux.org/alpine/cloud/alpine-cloud-images).
-
 ## SSH setup
 
 To set up SSH access for a virtual machine (VM), you'll need to ensure the VM's operating system has an SSH server installed and running, and that the firewall allows incoming connections on port 22 (or the configured SSH port).
@@ -131,22 +123,25 @@ ps -aef | grep sshd
 ```
 
 to confirm the SSH daemon (sshd) is running.
+
 2. Open Firewall Port:
 Check Firewall Rules: Ensure your VM's firewall (if any) allows incoming connections on port 22 (or your configured SSH port).
 Add a Rule: If necessary, add a rule to allow SSH traffic on the specified port.
+
 3. Configure SSH Keys (Optional but Recommended):
 Generate SSH Key Pair: On your local machine, generate an SSH key pair using ssh-keygen.
 Copy Public Key: Copy the public key to the VM's authorized keys file (~/.ssh/authorized_keys).
 Connect with Private Key: Use your private key to connect to the VM using SSH.
+
 4. Connect to the VM via SSH:
 Open a Terminal:
 Open a terminal or command prompt on your local machine.
 
 Use the ssh Command:
-Use the ssh command to connect to the VM, specifying the username, IP address, and optional port (if not 22). For example: 
+Use the ssh command to connect to the VM, specifying the username, IP address, and optional port (if not 22). For example:
 
 ```bash
-ssh username@vm_ip_address.
+ssh username@vm_ip_address
 ```
 
 First-Time Connection:
@@ -186,3 +181,29 @@ Code
 ```bash
     ssh user@vm_ip_address
 ```
+
+### Ansible test
+
+Assume inventory.ini is populated with a VM's ip, which has a public key inserted in it /.ssh directory and a username 'debian'.
+
+```sh
+ansible-inventory -i inventory.ini --list
+
+ansible myhosts -m ping -i inventory.ini -u debian
+```
+
+### NOTE
+
+- It is best to preseed the VM with the ssh public key. See "Permission denied publickey" below.
+- If failed to preseed public key. You need to find a way to login the VM console (cloud-init is one such method).
+- Then edit "/etc/ssh/sshd_config" (debian machines) for "PasswordAuthentication yes" in order to login with username/password.
+
+## Useful Resources
+
+- [Packer Proxmox ISO builder documentation](https://www.packer.io/docs/builders/proxmox/iso).
+- [Proxmox wiki on creating a custom cloud image](https://pve.proxmox.com/wiki/Cloud-Init_FAQ#Creating_a_custom_cloud_image).
+- [cloud-init documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
+- [Setting up Proxmox role with permissions for Packer](https://github.com/hashicorp/packer/issues/8463#issuecomment-726844945).
+- [Official Alpine cloud image builder](https://gitlab.alpinelinux.org/alpine/cloud/alpine-cloud-images).
+- [How to Create an SSH Key in Linux: Easy Step-by-Step Guide](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
+- [Permission denied publickey](https://serverfault.com/questions/684346/ssh-copy-id-permission-denied-publickey)
