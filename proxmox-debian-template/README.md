@@ -180,6 +180,7 @@ Code
 
 ```bash
     ssh user@vm_ip_address
+    ssh-keygen -f "/root/.ssh/known_hosts" -R "XXX.XXX.X.XX"
 ```
 
 ### Ansible test
