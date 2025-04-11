@@ -43,7 +43,15 @@ source "proxmox-iso" "debian" {
     io_thread    = var.io_thread
   }
 
-  http_directory = var.http_directory
+  http_content = {
+    "/cloud.cfg" = templatefile("http/cloud.cfg",
+      {
+        var                    = var,
+        ssh_public_key         = chomp(file(var.ssh_public_key_file))
+      })
+    "/preseed.cfg"  = file("http/preseed.cfg")
+    "/99-pve.cfg"   = file("http/99-pve.cfg")
+  }
   ssh_username   = var.ssh_username
   ssh_password   = var.ssh_password
   ssh_timeout    = var.ssh_timeout

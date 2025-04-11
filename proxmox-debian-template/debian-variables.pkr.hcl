@@ -204,10 +204,21 @@ variable "io_thread" {
 ############################################
 ### SSH block
 ############################################
-variable "http_directory" {
-  description = "Path to a directory to serve using an HTTP server. The files in this directory will be available over HTTP that will be requestable from the virtual machine. This is useful for hosting kickstart files and so on. By default this is an empty string, which means no HTTP server will be started."
+# variable "http_directory" {
+#   description = "Path to a directory to serve using an HTTP server. The files in this directory will be available over HTTP that will be requestable from the virtual machine. This is useful for hosting kickstart files and so on. By default this is an empty string, which means no HTTP server will be started."
+#   type        = string
+#   default     = "http"
+# }
+
+variable "ssh_public_key_file" {
+  description = "Public SSH Key for VM"
+  default     = "~/.ssh/packer_id_ed25519.pub"
   type        = string
-  default     = "http"
+  sensitive   = true
+  validation {
+    condition     = can(regex("(?i)PRIVATE", var.ssh_public_key_file)) == false
+    error_message = "ERROR Private SSH Key."
+  }
 }
 
 variable "ssh_username" {
