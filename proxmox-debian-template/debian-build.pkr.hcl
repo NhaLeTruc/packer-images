@@ -1,15 +1,6 @@
 build {
   sources = ["source.proxmox-iso.debian"]
 
-  # Using ansible playbooks to configure debian
-  # provisioner "ansible" {
-  #   playbook_file    = "./ansible/debian_config.yml"
-  #   use_proxy        = false
-  #   user             = "root"
-  #   ansible_env_vars = ["ANSIBLE_HOST_KEY_CHECKING=False"]
-  #   extra_arguments  = ["--extra-vars", "ansible_password=packer"]
-  # }
-
   # Copy default cloud-init config
   provisioner "file" {
     destination = "/etc/cloud/cloud.cfg"
