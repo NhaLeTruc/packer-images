@@ -12,7 +12,11 @@ Features:
 
 ## Usage
 
+Modifies `\vars\build.pkrvars.hcl` and `\http\preseed.cfg` for customized vm template.
 
+Reccommended variables
+
+1. disk_size = "10G"
 
 ## Development
 
