@@ -18,6 +18,49 @@ Reccommended variables
 
 1. disk_size = "10G"
 
+## Disk Partitioning
+
+For a Debian installation, you can partition a disk using the Debian installer's guided or manual partitioning options.
+
+For a simple setup, a single / (root) partition and a swap partition is often sufficient.
+
+For more complex setups or multi-user systems, you might consider separate partitions for /var, /home, and /usr/local, and potentially even /boot if you're using an older BIOS.
+
+Here's a breakdown of the key aspects:
+
+1. **Choosing a Partitioning Method:**
+- Guided Partitioning:
+The installer handles the process automatically, often based on your input about the disk and desired setup.
+- Manual Partitioning:
+You have more control over the size, type, and mount points of your partitions.
+2. **Partition Types:**
+- Primary Partitions: The basic partitions on a disk.
+- Extended Partition: Allows you to create multiple logical partitions within it.
+- Logical Partitions: Created within an extended partition.
+- Swap Partition: Used as virtual memory, increasing the system's memory capacity.
+3. **Partitioning Steps (Manual):**
+- Identify the Disk: Use lsblk or cat /proc/partitions to list available disks and their partitions.
+- Select the Disk: In the Debian installer, choose the disk you want to partition.
+- Create a New Partition: Select free space and choose to create a new partition.
+- Specify Partition Details: Determine the size, type (primary or logical), and mount point for the partition (e.g., /, /home, /swap).
+- Format the Partition: Choose a file system (e.g., ext4) and format the partition.
+- Mount the Partition: Assign a mount point (e.g., /) to make it accessible.
+4. **Important Considerations:**
+- Root Partition Size: Debian recommends at least 10GB for the / partition, but more is often recommended.
+- Swap Partition Size: As much as RAM or at least 512MB.
+- Separate Partitions: For multi-user systems or systems with lots of disk space, separate /var, /home, and /usr/local partitions are beneficial.
+- Boot Partition: If using an older BIOS, the boot partition should be within the first 1024 cylinders.
+- Encryption: Consider encrypting partitions, especially / and /home, for security.
+- Partitioning Standard: Choose between GPT (modern) or MBR (older). GPT is generally recommended for cloud servers.
+5. **Example Partition Scheme:**
+- / (Root): 30-100GB (or more depending on needs)
+- Swap: Equal to or greater than RAM, but not smaller than 512MB
+- /home: For user files, a separate large partition if you have many users
+6. **Using the Debian Installer:**
+The Debian installer provides a user-friendly interface for partitioning disks.
+It offers both automatic (guided) and manual partitioning options.
+You can resize existing partitions during the installation process.
+
 ## Development
 
 Required tools:
