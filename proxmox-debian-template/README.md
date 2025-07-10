@@ -85,7 +85,7 @@ Build with a template name suffix denoting the current commit, for example `2b1a
 packer init .
 packer fmt .
 packer validate --var-file vars/build.pkrvars.hcl .
-packer build -var "vm_id=905" -var "template_name_suffix=-12.10-10G" --var-file vars/build.pkrvars.hcl .
+packer build -var "vm_id=800" -var "disk_size=320G" -var "template_name_suffix=-12.10-320G" --var-file vars/build.pkrvars.hcl .
 ```
 
 ## Troubleshooting
