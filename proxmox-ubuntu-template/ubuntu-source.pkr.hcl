@@ -1,4 +1,4 @@
-source "proxmox-iso" "debian" {
+source "proxmox-iso" "ubuntu" {
 
   insecure_skip_tls_verify  = var.tls_bool
   node                      = var.proxmox_node

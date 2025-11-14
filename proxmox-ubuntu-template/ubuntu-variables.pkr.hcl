@@ -23,7 +23,7 @@ variable "vm_id" {
 variable "template_name" {
   description = "Name of the created template."
   type        = string
-  default     = "debian"
+  default     = "ubuntu-dataeng"
 }
 
 variable "template_name_suffix" {
@@ -36,7 +36,10 @@ variable "template_description" {
   description = "Description of the created template."
   type        = string
   default     = <<EOF
-Debian Linux cloud image with QEMU guest agent and cloud-init.
+Ubuntu Linux cloud image optimized for Data Engineering.
+Includes: Apache Spark 3.5.0, Scala 2.12, Python 3 with PySpark, Hadoop 3.3.6,
+Jupyter, Docker, and comprehensive data science libraries (pandas, numpy, scikit-learn).
+Ready for PySpark and Scala Spark workloads with QEMU guest agent and cloud-init.
 EOF
 }
 
