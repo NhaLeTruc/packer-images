@@ -1,0 +1,65 @@
+############################################
+### Admin block
+############################################
+tls_bool = true
+proxmox_node = "pve"
+vm_id = 900
+template_name = "arch-dataeng"
+template_name_suffix = "-rolling"
+
+############################################
+### boot_iso block
+############################################
+iso_type = "scsi"
+# Arch Linux ISO - replace with your ISO location
+# Download from: https://archlinux.org/download/
+iso_file = "local:iso/archlinux-2024.11.01-x86_64.iso"
+iso_checksum = "sha256:your-iso-checksum-here"
+iso_unmount = true
+
+############################################
+### Hardwares block
+############################################
+scsi_controller = "virtio-scsi-single"
+os = "l26"
+machine = ""
+bios = ""
+qemu_agent = true
+cloud_init = true
+cloud_init_storage_pool = "local-lvm"
+cores = 4
+sockets = 1
+memory = 8192
+cpu_type = "host"
+
+
+############################################
+### network_adapters block
+############################################
+network_bridge = "vmbr0"
+network_model = "virtio"
+
+
+############################################
+### disks block
+############################################
+disk_type = "scsi"
+disk_size = "50G"
+disk_format = "raw"
+storage_pool = "local-lvm"
+io_thread = true
+
+############################################
+### Packer SSH block
+############################################
+http_directory = "http"
+ssh_username = "root"
+ssh_password = "packer"
+ssh_timeout = "30m"
+ssh_port = 22
+
+
+############################################
+### Boot block
+############################################
+boot_wait = "10s"
