@@ -2,17 +2,18 @@
 ### Admin block
 ############################################
 tls_bool = true
-proxmox_node = "dlfsflksg"
-vm_id = 999999
-template_name = "temp"
-template_name_suffix = "dafdadf"
+proxmox_node = "pve"
+vm_id = 800
+template_name = "ubuntu-dataeng"
+template_name_suffix = "-22.04-lts"
 
 ############################################
 ### boot_iso block
 ############################################
 iso_type = "scsi"
-iso_file = "local:iso/debian-12.10.0-amd64-netinst.iso"
-iso_checksum = "8fde79cfc6b20a696200fc5c15219cf6d721e8feb367e9e0e33a79d1cb68fa83"
+# Ubuntu 22.04 LTS (Jammy Jellyfish) - replace with your ISO location
+iso_file = "local:iso/ubuntu-22.04.3-live-server-amd64.iso"
+iso_checksum = "sha256:a4acfda10b18da50e2ec50ccaf860d7f20b389df8765611142305c0e911d16fd"
 iso_unmount = true
 
 ############################################
@@ -20,15 +21,15 @@ iso_unmount = true
 ############################################
 scsi_controller = "virtio-scsi-single"
 os = "l26"
-machine = "q35"
-bios = "seabios"
+machine = ""
+bios = ""
 qemu_agent = true
-cloud_init = true 
-cloud_init_storage_pool = "storoe-lvm"
-cores = 2
-sockets = 2
-memory = 4096
-cpu_type = "kvm64"
+cloud_init = true
+cloud_init_storage_pool = "local-lvm"
+cores = 4
+sockets = 1
+memory = 8192
+cpu_type = "host"
 
 
 ############################################
@@ -44,10 +45,10 @@ firewall = false
 ### disks block
 ############################################
 disk_type = "scsi"
-disk_size = "1G"
-disk_format = "qcow2"
-storage_pool = "storoe-lvm"
-io_thread = false
+disk_size = "50G"
+disk_format = "raw"
+storage_pool = "local-lvm"
+io_thread = true
 
 ############################################
 ### Packer SSH block

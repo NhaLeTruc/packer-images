@@ -1,212 +1,431 @@
-# Proxmox Debian VM templates
+# Ubuntu Data Engineering Golden Image for Proxmox
 
-## Packer Debian
+## Overview
 
-Packer configuration for building a Debian Linux 'cloud image' Proxmox template.
+Packer configuration for building an Ubuntu Linux 'golden image' Proxmox template optimized for data engineering workloads, specifically designed to support PySpark and Scala Spark development and production environments.
 
-Features:
+## Features
 
-- Includes Cloud Init for configuration when cloning.
-- Includes `sudo` and QEMU guest agent.
-- Ready for configuration with Ansible.
+### Core Infrastructure
+- **Ubuntu 22.04 LTS** base image
+- **Cloud-init** for automated configuration when cloning
+- **QEMU guest agent** for Proxmox integration
+- **Docker** with Docker Compose for containerized workflows
+- Ready for Ansible automation
+
+### Data Engineering Stack
+
+#### Apache Spark 3.5.0
+- Pre-installed Apache Spark with Hadoop 3 bindings
+- Configured environment variables (`SPARK_HOME`, `PATH`)
+- Ready for both standalone and cluster modes
+
+#### Scala 2.12.18
+- Scala runtime and compiler
+- Compatible with Spark 3.5.0
+- Configured environment variables (`SCALA_HOME`)
+
+#### Python Data Engineering Ecosystem
+- **PySpark 3.5.0** - Python API for Apache Spark
+- **Pandas** - Data manipulation and analysis
+- **NumPy** - Numerical computing
+- **SciPy** - Scientific computing
+- **Matplotlib, Seaborn, Plotly** - Data visualization
+- **Jupyter Lab & Notebook** - Interactive development environment
+- **Scikit-learn** - Machine learning library
+- **PyArrow, FastParquet** - Columnar data format support
+- **SQLAlchemy, psycopg2, pymongo** - Database connectors
+- **Apache Airflow** - Workflow orchestration
+- **Delta-Spark** - Delta Lake support
+- **dbt-core** - Data transformation tool
+- **Great Expectations** - Data validation framework
+- **Prefect** - Modern workflow orchestration
+- **Poetry** - Python dependency management
+
+#### Hadoop 3.3.6
+- Hadoop client tools for HDFS interaction
+- Configured environment variables (`HADOOP_HOME`, `HADOOP_CONF_DIR`)
+
+#### Development Tools
+- **Java OpenJDK 11** - Required for Spark
+- **Git, Make** - Version control and build tools
+- **Vim, Nano** - Text editors
+- **htop, tmux** - System monitoring and terminal multiplexing
+- **Fish shell** - Modern shell with auto-completion
+
+## System Requirements
+
+### Recommended VM Specifications
+- **CPU**: 4 cores (host CPU type for best performance)
+- **Memory**: 8192 MB (8 GB) minimum, 16 GB recommended for production
+- **Disk**: 50 GB minimum (stores Spark, Hadoop, and Python libraries)
+- **Storage Format**: Raw (best performance) or qcow2
+
+### Proxmox Requirements
+- Proxmox VE 7.x or later
+- Packer 1.9.1 or later
+- Sufficient storage for template and clones
+
+## Quick Start
+
+### 1. Download Ubuntu ISO
+
+Download Ubuntu 22.04 LTS Server ISO and upload to your Proxmox server:
+
+```bash
+# On Proxmox server
+cd /var/lib/vz/template/iso
+wget https://releases.ubuntu.com/22.04.3/ubuntu-22.04.3-live-server-amd64.iso
+```
+
+### 2. Configure Build Variables
+
+Create `vars/build.pkrvars.hcl` from the sample:
+
+```bash
+cp vars/build.pkrvars.hcl.sample vars/build.pkrvars.hcl
+```
+
+Edit `vars/build.pkrvars.hcl` with your Proxmox settings:
+
+```hcl
+proxmox_node = "pve"              # Your Proxmox node name
+vm_id = 800                        # Template VM ID
+template_name = "ubuntu-dataeng"
+template_name_suffix = "-22.04"
+
+# Update ISO path to match your Proxmox storage
+iso_file = "local:iso/ubuntu-22.04.3-live-server-amd64.iso"
+
+# Adjust resources based on your needs
+cores = 4
+memory = 8192
+disk_size = "50G"
+```
+
+### 3. Set Environment Variables
+
+Create `vars/env` from the sample:
+
+```bash
+cp vars/env.sample vars/env
+```
+
+Configure your Proxmox API credentials:
+
+```bash
+export PROXMOX_URL="https://your-proxmox-server:8006/api2/json"
+export PROXMOX_USERNAME="root@pam"
+export PROXMOX_TOKEN="your-api-token-id"
+export PROXMOX_TOKEN_SECRET="your-api-token-secret"
+```
+
+Or source the env file:
+```bash
+source vars/env
+```
+
+### 4. Build the Template
+
+```bash
+# Initialize Packer
+packer init .
+
+# Format configuration files
+packer fmt .
+
+# Validate configuration
+packer validate --var-file vars/build.pkrvars.hcl .
+
+# Build the template
+packer build --var-file vars/build.pkrvars.hcl .
+```
+
+**Note**: The build process can take 30-60 minutes depending on your internet connection and Proxmox server performance.
 
 ## Usage
 
-Modifies `\vars\build.pkrvars.hcl` and `\http\preseed.cfg` for customized vm template.
+### Creating VMs from Template
 
-Reccommended variables
+Once the template is created, you can clone it in Proxmox:
 
-1. disk_size = "10G"
+```bash
+# Using Proxmox CLI
+qm clone 800 101 --name spark-dev-01
+qm set 101 --memory 16384
+qm set 101 --cores 8
+```
+
+Or use the Proxmox web UI to create linked clones for faster deployment.
+
+### Verifying Installation
+
+After cloning and starting a VM, verify the installations:
+
+```bash
+# Check Java
+java -version
+
+# Check Scala
+scala -version
+
+# Check Spark
+spark-shell --version
+spark-submit --version
+
+# Check PySpark
+python3 -c "import pyspark; print(pyspark.__version__)"
+
+# Check Hadoop
+hadoop version
+
+# Start PySpark shell
+pyspark
+
+# Start Scala Spark shell
+spark-shell
+```
+
+### Environment Variables
+
+The following environment variables are pre-configured in `/etc/profile.d/`:
+
+```bash
+JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+SCALA_HOME=/opt/scala
+SPARK_HOME=/opt/spark
+HADOOP_HOME=/opt/hadoop
+HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+PYSPARK_PYTHON=python3
+```
+
+### Running Spark Jobs
+
+#### PySpark Example
+
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("DataEngineering") \
+    .getOrCreate()
+
+# Your data engineering code here
+df = spark.read.csv("data.csv", header=True, inferSchema=True)
+df.show()
+```
+
+#### Scala Spark Example
+
+```scala
+import org.apache.spark.sql.SparkSession
+
+val spark = SparkSession.builder()
+  .appName("DataEngineering")
+  .getOrCreate()
+
+// Your data engineering code here
+val df = spark.read.option("header", "true").csv("data.csv")
+df.show()
+```
+
+### Jupyter Notebook
+
+Launch Jupyter Lab for interactive development:
+
+```bash
+jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+```
+
+Access at `http://your-vm-ip:8888`
 
 ## Disk Partitioning
 
-For a Debian installation, you can partition a disk using the Debian installer's guided or manual partitioning options.
+The preseed configuration uses a simple atomic partitioning scheme:
+- Single `/` (root) partition
+- Swap partition (automatically sized)
+- ext4 filesystem
 
-For a simple setup, a single / (root) partition and a swap partition is often sufficient.
+For production environments with large datasets, consider:
+- Separate `/var` partition for logs
+- Separate `/data` partition for Spark local directories
+- NFS or distributed filesystem for shared data
 
-For more complex setups or multi-user systems, you might consider separate partitions for /var, /home, and /usr/local, and potentially even /boot if you're using an older BIOS.
+## Customization
 
-Here's a breakdown of the key aspects:
+### Modifying Installed Packages
 
-1. **Choosing a Partitioning Method:**
-- Guided Partitioning:
-The installer handles the process automatically, often based on your input about the disk and desired setup.
-- Manual Partitioning:
-You have more control over the size, type, and mount points of your partitions.
-2. **Partition Types:**
-- Primary Partitions: The basic partitions on a disk.
-- Extended Partition: Allows you to create multiple logical partitions within it.
-- Logical Partitions: Created within an extended partition.
-- Swap Partition: Used as virtual memory, increasing the system's memory capacity.
-3. **Partitioning Steps (Manual):**
-- Identify the Disk: Use lsblk or cat /proc/partitions to list available disks and their partitions.
-- Select the Disk: In the Debian installer, choose the disk you want to partition.
-- Create a New Partition: Select free space and choose to create a new partition.
-- Specify Partition Details: Determine the size, type (primary or logical), and mount point for the partition (e.g., /, /home, /swap).
-- Format the Partition: Choose a file system (e.g., ext4) and format the partition.
-- Mount the Partition: Assign a mount point (e.g., /) to make it accessible.
-4. **Important Considerations:**
-- Root Partition Size: Debian recommends at least 10GB for the / partition, but more is often recommended.
-- Swap Partition Size: As much as RAM or at least 512MB.
-- Separate Partitions: For multi-user systems or systems with lots of disk space, separate /var, /home, and /usr/local partitions are beneficial.
-- Boot Partition: If using an older BIOS, the boot partition should be within the first 1024 cylinders.
-- Encryption: Consider encrypting partitions, especially / and /home, for security.
-- Partitioning Standard: Choose between GPT (modern) or MBR (older). GPT is generally recommended for cloud servers.
-5. **Example Partition Scheme:**
-- / (Root): 30-100GB (or more depending on needs)
-- Swap: Equal to or greater than RAM, but not smaller than 512MB
-- /home: For user files, a separate large partition if you have many users
-6. **Using the Debian Installer:**
-The Debian installer provides a user-friendly interface for partitioning disks.
-It offers both automatic (guided) and manual partitioning options.
-You can resize existing partitions during the installation process.
+Edit `ubuntu-build.pkr.hcl` to add or remove provisioners. The build is organized into logical sections:
 
-## Development
+1. Base system packages
+2. Java installation
+3. Scala installation
+4. Apache Spark installation
+5. Python data engineering libraries
+6. Docker installation
+7. Hadoop client tools
+8. Additional tools (dbt, Great Expectations, etc.)
+9. Fish shell (optional)
+10. Cleanup
 
-Required tools:
+### Changing Spark/Scala Versions
 
-- Packer `v1.9.1`.
+Update the download URLs in `ubuntu-build.pkr.hcl`:
 
-To create a Proxmox API token with correct privileges, [follow this guide](https://homelab.pages.houseofkummer.com/wiki/administrate/proxmox-api-tokens/).
+```bash
+# For Spark
+wget https://archive.apache.org/dist/spark/spark-VERSION/spark-VERSION-bin-hadoop3.tgz
 
-### Build
-
-Building only requires Packer.
-
-Create a variable file `vars/build.pkrvars.hcl` for Proxmox VM's variables.
-See `vars/build.pkrvars.hcl.sample` as an example.
-
-Set `PROXMOX_URL`; `PROXMOX_USERNAME`; `PROXMOX_TOKEN`; etc as environment variables. See `vars/env.sample` as an example.
-[See the Proxmox builder documentation](https://www.packer.io/plugins/builders/proxmox/iso) for more information.
-
-Build with a template name suffix denoting the current commit, for example `2b1adb0`:
-
-```sh
-packer init .
-packer fmt .
-packer validate --var-file vars/build.pkrvars.hcl .
-packer build -var "vm_id=800" -var "disk_size=320G" -var "template_name_suffix=-12.10-320G" --var-file vars/build.pkrvars.hcl .
+# For Scala
+wget https://downloads.lightbend.com/scala/VERSION/scala-VERSION.tgz
 ```
+
+Ensure compatibility between Spark and Scala versions.
+
+### Adding Custom Scripts
+
+Add additional provisioners to `ubuntu-build.pkr.hcl`:
+
+```hcl
+provisioner "file" {
+  source      = "scripts/custom-setup.sh"
+  destination = "/tmp/custom-setup.sh"
+}
+
+provisioner "shell" {
+  inline = [
+    "chmod +x /tmp/custom-setup.sh",
+    "/tmp/custom-setup.sh"
+  ]
+}
+```
+
+## Cloud-Init Configuration
+
+VMs cloned from this template can be configured using Cloud-Init:
+
+```bash
+# Set SSH keys
+qm set 101 --sshkey ~/.ssh/id_rsa.pub
+
+# Set IP address
+qm set 101 --ipconfig0 ip=192.168.1.100/24,gw=192.168.1.1
+
+# Set DNS
+qm set 101 --nameserver 8.8.8.8
+
+# Set user credentials
+qm set 101 --ciuser ubuntu
+qm set 101 --cipassword secure-password
+```
+
+See `http/cloud.cfg` for default Cloud-Init configuration.
 
 ## Troubleshooting
 
-Set `PACKER_LOG=1` to enable logging for easier troubleshooting.
-
-Avoid running Packer on Windows.
-This repository, Packer and Debian all assume you are running on Linux.
-
-## SSH setup
-
-To set up SSH access for a virtual machine (VM), you'll need to ensure the VM's operating system has an SSH server installed and running, and that the firewall allows incoming connections on port 22 (or the configured SSH port).
-
-Here's a breakdown of the process:
-1. Install and Configure an SSH Server on the VM:
-Install OpenSSH:
-If you're using a Linux-based VM, install OpenSSH using your distribution's package manager (e.g., sudo apt-get install openssh-server on Debian/Ubuntu).
-
-Start and Enable the SSH Service:
-After installation, start the SSH service and enable it to start on boot (e.g., sudo systemctl start sshd, sudo systemctl enable sshd).
-
-Verify SSH is Running:
-Use a command like
+### Enable Packer Logging
 
 ```bash
-ps -aef | grep sshd 
+export PACKER_LOG=1
+packer build --var-file vars/build.pkrvars.hcl .
 ```
 
-to confirm the SSH daemon (sshd) is running.
+### Common Issues
 
-2. Open Firewall Port:
-Check Firewall Rules: Ensure your VM's firewall (if any) allows incoming connections on port 22 (or your configured SSH port).
-Add a Rule: If necessary, add a rule to allow SSH traffic on the specified port.
+**Build fails during package installation:**
+- Check internet connectivity from Proxmox host
+- Verify Ubuntu mirror is accessible
+- Increase `ssh_timeout` in variables
 
-3. Configure SSH Keys (Optional but Recommended):
-Generate SSH Key Pair: On your local machine, generate an SSH key pair using ssh-keygen.
-Copy Public Key: Copy the public key to the VM's authorized keys file (~/.ssh/authorized_keys).
-Connect with Private Key: Use your private key to connect to the VM using SSH.
+**Out of disk space:**
+- Increase `disk_size` in build.pkrvars.hcl (minimum 50G recommended)
+- Check Proxmox storage pool has sufficient space
 
-4. Connect to the VM via SSH:
-Open a Terminal:
-Open a terminal or command prompt on your local machine.
+**Java/Spark not found after boot:**
+- Check `/etc/profile.d/` scripts are present
+- Source the profile: `source /etc/profile`
+- Verify installations in `/opt/` directory
 
-Use the ssh Command:
-Use the ssh command to connect to the VM, specifying the username, IP address, and optional port (if not 22). For example:
+**PySpark import errors:**
+- Ensure pip packages installed successfully
+- Check Python version: `python3 --version`
+- Reinstall: `pip3 install pyspark==3.5.0`
+
+## SSH Access
+
+The template is configured for root SSH access during build (password: `packer`). For production:
+
+1. Use Cloud-Init to set SSH keys:
+```bash
+qm set <vmid> --sshkey ~/.ssh/id_rsa.pub
+```
+
+2. Disable root password login after first boot
+3. Create non-root users with sudo privileges
+
+## Performance Tuning
+
+### Spark Configuration
+
+For production workloads, tune Spark settings in `$SPARK_HOME/conf/spark-defaults.conf`:
+
+```properties
+spark.driver.memory              4g
+spark.executor.memory            4g
+spark.executor.cores             2
+spark.local.dir                  /data/spark-temp
+```
+
+### Docker Configuration
+
+Configure Docker to use appropriate storage driver for Proxmox:
 
 ```bash
-ssh username@vm_ip_address
+# Edit /etc/docker/daemon.json
+{
+  "storage-driver": "overlay2"
+}
 ```
 
-First-Time Connection:
-You may be prompted to confirm the server's fingerprint the first time you connect.
+## Development Tools
 
-Provide Password or Use Key:
-If you're using password-based authentication, provide the VM's user password. If using key-based authentication, the connection should establish automatically.
+Included development tools for data engineering:
 
-Example (Using Key-Based Authentication):
-On your local machine:
-Code
-
-```bash
-    ssh-keygen -t ed25519  # Generate a new key
-```
-
-On the VM:
-Code
-
-```bash
-    mkdir -p ~/.ssh  # Create the .ssh directory if it doesn't exist
-    touch ~/.ssh/authorized_keys  # Create the authorized_keys file
-    chmod 700 ~/.ssh  # Set permissions for the directory
-    chmod 600 ~/.ssh/authorized_keys  # Set permissions for the file
-```
-
-Copy your public key to the VM's ~/.ssh/authorized_keys file:
-Code
-
-```bash
-    ssh-copy-id -i ~/.ssh/public_key.pub user@vm_ip_address
-```
-
-Connect to the VM:
-Code
-
-```bash
-    ssh user@vm_ip_address
-
-    # Remove old key from same reused IP.
-    ssh-keygen -f "/root/.ssh/known_hosts" -R "XXX.XXX.X.XX"
-```
-
-### Ansible test
-
-Assume inventory.ini is populated with a VM's ip, which has a public key inserted in it /.ssh directory and a username 'debian'.
-
-```sh
-ansible-inventory -i inventory.ini --list
-
-ansible myhosts -m ping -i inventory.ini -u debian
-```
-
-### NOTE
-
-- It is best to use cloud-init to prepare the VM with the ssh public key. See `http/cloud.cfg` for details.
-- Cloud init config file `http/cloud.cfg` do not behave like `http/preseed.cfg`.
-- `http/preseed.cfg` works for Debian OS.
-- `http/cloud.cfg` works for Cloud-init. They do not cross-communicate.
+- **Poetry**: Modern Python dependency management
+- **dbt**: Data transformation workflows
+- **Great Expectations**: Data validation and documentation
+- **Prefect**: Modern workflow orchestration
+- **Apache Airflow**: Traditional workflow orchestration
 
 ## Useful Resources
 
-- [Packer Proxmox ISO builder documentation](https://www.packer.io/docs/builders/proxmox/iso).
-- [Proxmox wiki on creating a custom cloud image](https://pve.proxmox.com/wiki/Cloud-Init_FAQ#Creating_a_custom_cloud_image).
-- [cloud-init documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
-- [Cloud-Init FAQ](https://pve.proxmox.com/wiki/Cloud-Init_FAQ#Creating_a_custom_cloud_image)
-- [Setting up Proxmox role with permissions for Packer](https://github.com/hashicorp/packer/issues/8463#issuecomment-726844945).
-- [Official Alpine cloud image builder](https://gitlab.alpinelinux.org/alpine/cloud/alpine-cloud-images).
-- [How to Create an SSH Key in Linux: Easy Step-by-Step Guide](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
-- [Packer Proxmox Templates](https://github.com/trfore/packer-proxmox-templates)
-- [Packer Debian 11 (Bullseye) Template for Proxmox](https://github.com/jacaudi/packer-template-debian-11)
-- [Packer](https://github.com/vrsf-homelab/packer)
-- [Packer Debian](https://github.com/LKummer/packer-debian)
-- [Using Packer and Proxmox to Build Templates](https://dev.to/umairk/using-packer-and-proxmox-to-build-templates-455f)
-- [Debian 12 Bookworm cloud-init configs](https://gist.github.com/dazeb/fde301b5035e8af3b040c6109c3d8170)
-- [Leveraging Cloud-init in Debian for Efficient Cloud Deployments](https://shape.host/resources/leveraging-cloud-init-in-debian-for-efficient-cloud-deployments)
+- [Apache Spark Documentation](https://spark.apache.org/docs/latest/)
+- [PySpark API Reference](https://spark.apache.org/docs/latest/api/python/)
+- [Scala Documentation](https://docs.scala-lang.org/)
+- [Packer Proxmox Builder](https://www.packer.io/plugins/builders/proxmox/iso)
+- [Cloud-Init Documentation](https://cloudinit.readthedocs.io/)
+- [Ubuntu Cloud Images](https://cloud-images.ubuntu.com/)
+- [Proxmox Cloud-Init FAQ](https://pve.proxmox.com/wiki/Cloud-Init_FAQ)
+
+## License
+
+This configuration is provided as-is for building Ubuntu-based Proxmox templates.
+
+## Contributing
+
+Improvements and suggestions are welcome. Please ensure:
+- Packer configurations are validated before submitting
+- Documentation is updated for any changes
+- Version compatibility is maintained
+
+## Version Information
+
+- **Ubuntu**: 22.04 LTS (Jammy Jellyfish)
+- **Apache Spark**: 3.5.0
+- **Scala**: 2.12.18
+- **Hadoop**: 3.3.6
+- **Java**: OpenJDK 11
+- **Python**: 3.10+ (Ubuntu default)
+- **Packer**: 1.9.1+
+
+Last updated: 2025-11-14
